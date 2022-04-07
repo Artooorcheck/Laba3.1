@@ -1,6 +1,7 @@
 #pragma once
 #include "Bank account.h"
 #include "Collection.h"
+#include <functional>
 
 enum class AccountType
 {
@@ -35,6 +36,12 @@ private:
 	void Select();
 
 	void Print();
+
+	void AdminChangeBalance();
+
+	void AdminUpdateInfo();
+
+	void GetMoney();
 
 public:
 	Autorization();

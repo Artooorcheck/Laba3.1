@@ -56,6 +56,35 @@ bool BankAccount::ParseString(std::string data)
 	return res;
 }
 
+bool SetDepositType(DepositType& dType, int value)
+{
+	if (!std::cin.good())
+	{
+		ConsoleClear();
+		return false;
+	}
+	if (value < 1 && value > 3)
+	{
+		return false;
+	}
+	dType = (DepositType)value;
+	return true;
+}
+
+bool SetDepositType(DepositType& dType, std::string value)
+{
+	int iVal;
+	if (TryParse(value, iVal))
+	{
+		return SetDepositType(dType, iVal);
+	}
+	else
+	{
+		return false;
+	}
+	return true;
+}
+
 bool BankAccount::SetField(std::string fieldName, std::string value)
 {
 	if (fieldName == "number")
@@ -86,15 +115,7 @@ bool BankAccount::SetField(std::string fieldName, std::string value)
 	}
 	if (fieldName == "dtype")
 	{
-		int t;
-		if (TryParse(value, t))
-		{
-			dType = DepositType(t);
-		}
-		else
-		{
-			return false;
-		}
+		return SetDepositType(dType, value);
 	}
 	if (fieldName == "login")
 	{
@@ -149,12 +170,21 @@ std::string BankAccount::GetField(std::string fieldName)
 	return "";
 }
 
-bool BankAccount::ReadFromConsole()
+void SetHiddenField(int& number, int& code, tm& openDate)
 {
-	srand(time_t(NULL));
+	srand(time(0));
 	number = rand();
 	code = rand();
+	std::time_t time = std::time(nullptr);
 
+	openDate = *std::localtime(&time);
+
+	openDate.tm_year += 1900;
+
+}
+
+bool BankAccount::ReadFromConsole()
+{
 	std::cout << "Фамилия: ";
 	std::cin >> lastName;
 	std::cout << "Депозит: ";
@@ -170,31 +200,21 @@ bool BankAccount::ReadFromConsole()
 	std::cout << "Пароль: ";
 	std::cin >> password;
 
-	std::time_t time = std::time(nullptr);
-
-	openDate = *std::localtime(&time);
-
-	openDate.tm_year += 1900;
-
 	std::cout << "Выберите тип вклада:\n";
 	std::cout << "1.Срочный\n";
 	std::cout << "2.Накопительный\n";
 	std::cout << "3.Сберегательный\n";
 	int type;
 	std::cin >> type;
-	if (!std::cin.good())
-	{
-		ConsoleClear();
-		return false;
-	}
-	if (type < 1 && type > 3)
-	{
-		return false;
-	}
-	dType = (DepositType)type;
-	percent = 9 + type * type;
 
-	return true;
+	bool res = SetDepositType(dType, type);
+	if (res)
+	{
+		percent = 9 + type * type;
+		SetHiddenField(number, code, openDate);
+	}
+
+	return res;
 }
 
 std::string ToString(int n)

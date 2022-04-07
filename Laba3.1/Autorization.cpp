@@ -3,7 +3,7 @@
 
 Autorization::Autorization()
 {
-	
+
 	accType = AccountType::logout;
 	bank.Read();
 	exit = false;
@@ -58,6 +58,36 @@ void InterfaceAdmin()
 	std::cout << "6.Закрыть программу\n";
 }
 
+void Autorization::AdminChangeBalance()
+{
+	int count = bank.GetSelected().size();
+	if (count == 1)
+	{
+		ChangeBalance();
+	}
+	else if (count > 1)
+	{
+		std::cout << "Уточните Фильтры!";
+	}
+	else
+	{
+		std::cout << "Вы не выбрали ни одного пользователя!";
+	}
+
+}
+
+void Autorization::AdminUpdateInfo()
+{
+	if (bank.GetSelected().size() == 0)
+	{
+		std::cout << "Вы не выбрали ни одного пользователя!";
+	}
+	else
+	{
+		Update();
+	}
+}
+
 void Autorization::AdminMenu()
 {
 	InterfaceAdmin();
@@ -69,30 +99,11 @@ void Autorization::AdminMenu()
 	}
 	else if (command == 2)
 	{
-		int count = bank.GetSelected().size();
-		if (count == 1)
-		{
-			ChangeBalance();
-		}
-		else if (count > 1)
-		{
-			std::cout << "Уточните Фильтры!";
-		}
-		else
-		{
-			std::cout << "Вы не выбрали ни одного пользователя!";
-		}
+		AdminChangeBalance();
 	}
 	else if (command == 3)
 	{
-		if(bank.GetSelected().size()==0)
-		{
-			std::cout << "Вы не выбрали ни одного пользователя!";
-		}
-		else
-		{
-			Update();
-		}
+		AdminUpdateInfo();
 	}
 	else if (command == 4)
 	{
@@ -136,7 +147,7 @@ void Autorization::LogOutMenu()
 	{
 		std::cout << "Неизвестная комманда!";
 	}
-	
+
 }
 
 void Autorization::LogInMenu()
@@ -225,9 +236,44 @@ void Autorization::Update()
 	}
 }
 
+void ForkSelect(int command)
+{
+	switch (command)
+	{
+	case 1:
+		std::cout << "Введите номер счета: ";
+		break;
+	case 2:
+		std::cout << "Введите дату открытия счета: ";
+		break;
+	case 3:
+		std::cout << "Введите фамилию владельца счета: ";
+		break;
+	case 4:
+		std::cout << "Выберите тип вклада:\n";
+		std::cout << "1.Срочный\n";
+		std::cout << "2.Накопительный\n";
+		std::cout << "3.Сберегательный\n";
+		break;
+	case 5:
+		std::cout << "Введите размер депозита: ";
+		break;
+	case 6:
+		std::cout << "Введите годовой процент: ";
+		break;
+	case 7:
+		std::cout << "Введите код счета: ";
+		break;
+	default:
+		std::cout << "Неизвестная комманда\n";
+		break;
+	}
+}
+
 void Autorization::Select()
 {
 	int command;
+	std::string params[] = { "number", "opendate", "lastname", "dtype", "sum", "percent", "code" };
 	std::cout << "1. Фильтровать по номеру счета\n";
 	std::cout << "2. Фильтровать по дате открытия\n";
 	std::cout << "3. Фильтровать по владельцу\n";
@@ -236,55 +282,12 @@ void Autorization::Select()
 	std::cout << "6. Фильтровать по проценту\n";
 	std::cout << "7. Фильтровать по коду\n";
 	std::cin >> command;
-	std::string param = "";
 	std::string value = "";
-	switch (command)
-	{
-	case 1:
-		std::cout << "Введите номер счета: ";
-		std::cin >> value;
-		param = "number";
-		break;
-	case 2:
-		std::cout << "Введите дату открытия счета: ";
-		std::cin >> value;
-		param = "opendate";
-		break;
-	case 3:
-		std::cout << "Введите фамилию владельца счета: ";
-		std::cin >> value;
-		param = "lastname";
-		break;
-	case 4:
-		std::cout << "Выберите тип вклада:\n";
-		std::cout << "1.Срочный\n";
-		std::cout << "2.Накопительный\n";
-		std::cout << "3.Сберегательный\n";
-		std::cin >> value;
-		param = "dtype";
-		break;
-	case 5:
-		std::cout << "Введите размер депозита: ";
-		std::cin >> value;
-		param = "sum";
-		break;
-	case 6:
-		std::cout << "Введите годовой процент: ";
-		std::cin >> value;
-		param = "percent";
-		break;
-	case 7:
-		std::cout << "Введите код счета: ";
-		std::cin >> value;
-		param = "code";
-		break;
-	default:
-		std::cout << "Неизвестная комманда\n";
-		break;
-	}
 	if (command > 0 && command < 8)
 	{
-		bank.Select(param + '=' + value);
+		ForkSelect(command);
+		std::cin >> value;
+		bank.Select(params[command - 1] + "=" + value);
 	}
 }
 
@@ -318,7 +321,7 @@ bool Autorization::Exit()
 void Autorization::SignUp()
 {
 	BankAccount* acc = new BankAccount();
-	if(acc->ReadFromConsole())
+	if (acc->ReadFromConsole())
 	{
 
 		std::string login = acc->GetField("login");
@@ -352,31 +355,38 @@ void Autorization::AskLoginAndPassword()
 
 }
 
+void Autorization::GetMoney()
+{
+	int sum, dSum;
+	std::cout << "Ведите сумму, которую хотите снять:";
+	std::cin >> dSum;
+	TryParse(bank.GetSelected().begin()->GetField("sum"), sum);
+	if (sum == dSum)
+	{
+		bank.Remove();
+		if (accType != AccountType::admin)
+		{
+			accType = AccountType::logout;
+		}
+	}
+	else if (sum > dSum)
+	{
+		bank.Update("sum=" + ToString(sum - dSum));
+	}
+	else
+	{
+		std::cout << "Вы не можете снять сумму превышающую вклад!";
+	}
+
+}
+
 void Autorization::ChangeBalance()
 {
-	int sum, dSum, type;
+	int type;
 	TryParse(bank.GetSelected().begin()->GetField("dtype"), type);
 	if (type == 1)
 	{
-		std::cout << "Ведите сумму, которую хотите снять:";
-		std::cin >> dSum;
-		TryParse(bank.GetSelected().begin()->GetField("sum"), sum);
-		if (sum > dSum)
-		{
-			bank.Update("sum=" + ToString(sum - dSum));
-		}
-		else if (sum == dSum)
-		{
-			bank.Remove();
-			if (accType != AccountType::admin)
-			{
-				accType = AccountType::logout;
-			}
-		}
-		else
-		{
-			std::cout << "Вы не можете снять сумму превышающую вклад!";
-		}
+		GetMoney();
 	}
 	else
 	{
